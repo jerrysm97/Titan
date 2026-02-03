@@ -5,12 +5,15 @@ import { collection, addDoc, orderBy, query, onSnapshot } from 'firebase/firesto
 import { auth, db } from '../../firebaseConfig';
 import { FlashList } from "@shopify/flash-list";
 
-export default function ChatScreen() {
+export default function ChatScreen({ route, navigation }: any) {
     const [messages, setMessages] = useState<IMessage[]>([]);
+    const { roomId, roomName } = route.params;
 
-    // 1. Listen for updates in real-time
     useLayoutEffect(() => {
-        const collectionRef = collection(db, 'chats');
+        navigation.setOptions({ title: roomName || 'Chat' });
+
+        // Listen to specific room messages
+        const collectionRef = collection(db, 'rooms', roomId, 'messages');
         const q = query(collectionRef, orderBy('createdAt', 'desc'));
 
         const unsubscribe = onSnapshot(q, querySnapshot => {
@@ -24,10 +27,9 @@ export default function ChatScreen() {
             );
         });
 
-        return unsubscribe; // Detach listener when leaving screen
-    }, []);
+        return unsubscribe;
+    }, [roomId, roomName, navigation]);
 
-    // 2. Send Message Function
     const onSend = useCallback((messages: IMessage[] = []) => {
         setMessages(previousMessages =>
             GiftedChat.append(previousMessages, messages)
@@ -35,13 +37,18 @@ export default function ChatScreen() {
 
         const { _id, createdAt, text, user } = messages[0];
 
-        addDoc(collection(db, 'chats'), {
+        // Add to specific room
+        addDoc(collection(db, 'rooms', roomId, 'messages'), {
             _id,
             createdAt,
             text,
-            user,
+            user: {
+                _id: auth?.currentUser?.uid,
+                name: auth?.currentUser?.email,
+                avatar: 'https://i.pravatar.cc/300',
+            }, // Use real auth user
         });
-    }, []);
+    }, [roomId]);
 
     const renderListView = (props: any) => {
         return (
@@ -56,16 +63,14 @@ export default function ChatScreen() {
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0} // Adjust based on your header height
+                keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
                 style={{ flex: 1 }}
             >
                 <GiftedChat
                     messages={messages}
                     onSend={messages => onSend(messages)}
                     user={{
-                        _id: auth?.currentUser?.email || 'guest', // Uses logged in email as ID or guest
-                        name: auth?.currentUser?.displayName || 'Guest',
-                        avatar: 'https://i.pravatar.cc/300', // Random avatar for fun
+                        _id: auth?.currentUser?.uid || 'guest',
                     }}
                     renderListView={renderListView}
                 />
@@ -73,9 +78,3 @@ export default function ChatScreen() {
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    }
-})

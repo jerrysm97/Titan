@@ -1,18 +1,21 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { getAuth, initializeAuth } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// TODO: Replace with your actual Firebase configuration keys
-// Get these keys from your Firebase Console -> Project Settings
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "your-app.firebaseapp.com",
-    projectId: "your-app",
-    storageBucket: "your-app.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:12345:web:abcde"
+    apiKey: "AIzaSyBQ1xKy4DcP7RZjLVUYUaIbICt0P4Zlv44",
+    authDomain: "titan-ed15a.firebaseapp.com",
+    projectId: "titan-ed15a",
+    storageBucket: "titan-ed15a.firebasestorage.app",
+    messagingSenderId: "93994448945",
+    appId: "1:93994448945:web:c47d269ae8326cdacefd10",
+    measurementId: "G-21JLTH2089"
 };
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+
+// Initialize Auth with standard getAuth
 export const auth = getAuth(app);
+
+export const db = getFirestore(app);
